@@ -4,16 +4,18 @@ void setup(void)
 {
     Serial.begin(9600);
     pinMode(LED_BUILTIN, OUTPUT);
+    pinMode(A0, INPUT_PULLUP);
     pinMode(12, INPUT_PULLUP);
     pinMode(11, INPUT_PULLUP);
     pinMode(10, INPUT);
-    pinMode(9, INPUT);
+    pinMode(PIND7 , INPUT);
 }
 
 void loop(void)
 {
     auto start = micros();
-    auto data = analogRead(A0);
+    auto data = digitalRead(A0);
+//    auto data = analogRead(A0);
     auto dur = micros() - start;
     Serial.print(F("analogRead="));
     Serial.println(dur);
