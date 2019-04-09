@@ -4,8 +4,16 @@
 //#include "TM1637.h"
 #include <TM1637Display.h>
 
-#define CLK 8
 #define DIO 7
+#define CLK 8
+#define START 7
+#define STOP 8
+#define TEAM_KEYS 0b1111
+
+enum state
+{
+    state_read, state_time, state_answer
+};
 
 //TM1637 tm1637(CLK,DIO);
 TM1637Display display(CLK, DIO);
@@ -13,8 +21,8 @@ TM1637Display display(CLK, DIO);
 void setup(void)
 {
     //set A0-3
-    DDRC  &= ~0b1111;
-    PORTC |= 0b1111;
+    DDRC  &= ~TEAM_KEYS;
+    PORTC |= TEAM_KEYS;
     // pinMode(A0, INPUT_PULLUP);
     // pinMode(A1, INPUT_PULLUP);
     // pinMode(A2, INPUT_PULLUP);
@@ -33,7 +41,7 @@ void setup(void)
 uint8_t buttons;
 
 void readMainPins(void){
-    buttons = PINC & 0b1111;
+    buttons = PINC & TEAM_KEYS;
 }
 
 void loop(void)
