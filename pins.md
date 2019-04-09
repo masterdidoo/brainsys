@@ -21,5 +21,5 @@
 * a7
 
 * timer0
-* timer1
-* timer2  cloc 
+* timer1   cloc
+* timer2

@@ -1,18 +1,45 @@
+
 #include <Arduino.h>
+//#include <TimerOne.h>
+//#include "TM1637.h"
+#include <TM1637Display.h>
+
+#define CLK 8
+#define DIO 7
+
+//TM1637 tm1637(CLK,DIO);
+TM1637Display display(CLK, DIO);
 
 void setup(void)
 {
+    //set A0-3
+    DDRC  &= ~0b1111;
+    PORTC |= 0b1111;
+    // pinMode(A0, INPUT_PULLUP);
+    // pinMode(A1, INPUT_PULLUP);
+    // pinMode(A2, INPUT_PULLUP);
+    // pinMode(A3, INPUT_PULLUP);
+
     Serial.begin(9600);
     pinMode(LED_BUILTIN, OUTPUT);
-    pinMode(A0, INPUT_PULLUP);
     pinMode(12, INPUT_PULLUP);
     pinMode(11, INPUT_PULLUP);
     pinMode(10, INPUT);
     pinMode(PIND7 , INPUT);
+
+//    Timer1.attachInterrupt(read);
+}
+
+uint8_t buttons;
+
+void readMainPins(void){
+    buttons = PINC & 0b1111;
 }
 
 void loop(void)
 {
+    readMainPins();
+
     auto start = micros();
     auto data = digitalRead(A0);
 //    auto data = analogRead(A0);
