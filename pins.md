@@ -11,15 +11,15 @@
 * d12           MISO
 * d13 led       SCK
 
-* a0
-* a1
-* a2
-* a3
+* a0                            t1
+* a1                            t2
+* a2                            t3
+* a3                            t4
 * a4    sda
 * a5    sck
 * a6
 * a7
 
-* timer0
+* timer0                        beeper
 * timer1   cloc
 * timer2
