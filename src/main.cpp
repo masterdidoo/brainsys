@@ -135,7 +135,7 @@ void readKeys(void){
     if (digitalRead(START)) {
         state = state_time;
         start = micros() - 1000000;
-        left_time = state == state_read ? 61 : 20;
+        left_time = state == state_read ? 61 : 21;
     }
 }
 
