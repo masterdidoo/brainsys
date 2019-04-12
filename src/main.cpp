@@ -145,3 +145,8 @@ void loop(void)
     readKeys();
     updateTimer();
 }
+
+ISR (PCINT2_vect) // handle pin change interrupt for D0 to D7 here
+{
+    digitalWrite(13,digitalRead(7));
+}
