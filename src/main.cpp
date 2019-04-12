@@ -1,41 +1,38 @@
 
 #include <Arduino.h>
-//#include <TimerOne.h>
-//#include "TM1637.h"
-#include <TM1637Display.h>
+#include "TM1637.h"
 
-#define RESET 2
-#define START 3
-#define BEEP 6
-#define DIO 7
+#define RESET 6
+#define START 7
 #define CLK 8
-#define TEAM_KEYS 0b1111
+#define DIO 9
+#define BEEP 10
+
+#define ALL_KEYS 0b11111100
+#define TEAM_KEYS 0b00111100
 
 enum State
 {
     state_read, state_time, state_answer, state_false, state_end
 };
 
-//TM1637 tm1637(CLK,DIO);
-TM1637Display display(CLK, DIO);
+TM1637 display(CLK,DIO);
+//TM1637Display display(CLK, DIO);
 State state;
 
 void setup(void)
 {
-    //set A0-3
-    DDRC  &= ~TEAM_KEYS;
-    PORTC |= TEAM_KEYS;
+    //set D2-7
+    DDRD  &= ~ALL_KEYS;
+    PORTD |= ALL_KEYS;
     // pinMode(A0, INPUT_PULLUP);
     // pinMode(A1, INPUT_PULLUP);
     // pinMode(A2, INPUT_PULLUP);
     // pinMode(A3, INPUT_PULLUP);
-
-    pinMode(RESET, INPUT_PULLUP);
-    pinMode(START, INPUT_PULLUP);
+    // pinMode(RESET, INPUT_PULLUP);
+    // pinMode(START, INPUT_PULLUP);
 
     pinMode(BEEP, OUTPUT);
-    pinMode(DIO, OUTPUT);
-    pinMode(CLK, OUTPUT);
 
     Serial.begin(9600);
 }
@@ -60,7 +57,7 @@ void teamTone(void){
 }
 
 uint8_t bitToTeam(void){
-    uint8_t mask = 1;
+    uint8_t mask = 0b100;
     for(uint8_t i = 1; i <= 4; i++)
     {
         if (buttons & mask) {
@@ -73,7 +70,7 @@ uint8_t bitToTeam(void){
 }
 
 void displayTeam(uint8_t team){
-    display.showNumberDec(team, false, 1, 1);//??
+    display.display(1, team);
 }
 
 void readMainPins(void){
@@ -105,12 +102,13 @@ void updateTimer(void){
     if (state != state_time){
         return;
     }
-    auto cur = micros();
-    if (cur - start >= 1000000){
-        start = cur;
+    auto cur = millis();
+    if (cur - start >= 1000){
+        start += 1000;
         left_time--;
         
-        display.showNumberDec(left_time, true, 2, 2);//??
+        display.display(2, left_time / 10);//??
+        display.display(3, left_time % 10);//??
 
         if (left_time <= 0){
             timeOutTone();
@@ -126,10 +124,10 @@ void updateTimer(void){
 
 void readKeys(void){
     if (digitalRead(RESET)) {
+        if (state != state_false) enabled = TEAM_KEYS;
         state = state_read;
         left_time = 0;
-        display.clear();
-        enabled = TEAM_KEYS;
+        display.clearDisplay();
     }
     if (state != state_read && state != state_answer) return;
     if (digitalRead(START)) {
@@ -146,7 +144,8 @@ void loop(void)
     updateTimer();
 }
 
-ISR (PCINT2_vect) // handle pin change interrupt for D0 to D7 here
-{
-    digitalWrite(13,digitalRead(7));
-}
+// handle pin change interrupt for D0 to D7 here
+// ISR (PCINT2_vect)
+// {
+//     digitalWrite(13,digitalRead(7));
+// }

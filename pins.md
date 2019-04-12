@@ -6,7 +6,7 @@
 * d7                            display dio     start
 * d8                            display clk     display clk
 * d9      PWM-1                                 display dio
-* d10     PWM-1                                 set mode
+* d10     PWM-1                                 beep
 * d11     PWM-2 MOSI
 * d12           MISO
 * d13 led       SCK
