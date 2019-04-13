@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "team.h"
+#include "fifo.h"
 #include "display.h"
 
 #define RESET 6
@@ -94,24 +94,29 @@ void readTeams(FIFORow &key){
             
             disabled |= mask;
         }
+        mask <<= 1;
     }
 }
 
-void readHost(uint8_t pins){
-    // if (millis() - lastReset < 1000) {
-    //     lastReset = millis();
-    //     return;
-    // }
-    // lastReset = millis();
+bool resetEnable = true;
+uint8_t enabledUp;
 
-    Serial.println(pins, 2);
-    Serial.println(enabled, 2);
-    Serial.println(disabled, 2);
+void readHost(uint8_t pins, uint8_t pinsUp){
+    Serial.println(0x800|pins, 2);
+    Serial.println(0x800|pinsUp, 2);
+    Serial.println(0x800|enabled, 2);
+    Serial.println(0x800|enabledUp, 2);
+//    Serial.println(0x800|disabled, 2);
     Serial.print(keysFIFO.inId);
     Serial.print(' ');
     Serial.println(keysFIFO.outId);
 
-    if (pins & bit(digitalPinToPCMSKbit(RESET))) {
+    if (pinsUp & bit(digitalPinToPCMSKbit(RESET))) {
+        lastReset = millis();
+    }
+
+    if (resetEnable && pins & bit(digitalPinToPCMSKbit(RESET))) {
+        resetEnable = false;
         if (state != state_false) {
             enabled = ALL_KEYS;
             disabled = ~ALL_KEYS;
@@ -124,7 +129,6 @@ void readHost(uint8_t pins){
     }
     if (state != state_read && state != state_answer) return;
     if (pins & bit(digitalPinToPCMSKbit(START))) {
-        lastReset = millis();
         left_time = state == state_read ? 61 : 21;
         state = state_time;
         timeStart = millis();
@@ -140,9 +144,12 @@ void readKeys(void){
         if (state == state_read || state == state_time) {
             readTeams(key);
         }
-        readHost(key.pins);
+        readHost(key.pins, key.pinsUp);
     }
+    
+    resetEnable = resetEnable || (millis() - lastReset < 50);
     enabled = ~disabled;
+    enabledUp = bit(digitalPinToPCMSKbit(RESET));
 }
 
 void updateTimer(void){
@@ -180,12 +187,19 @@ void loop(void)
     //delay(1000);
 }
 
+uint8_t prev_pins = 0;
 // handle pin change interrupt for D0 to D7 here
 ISR (PCINT2_vect)
 {
-    auto pins = (~PIND) & enabled;
-    if (!pins) return;
-    enabled &= ~pins;
+    uint8_t new_pins = ~PIND;
 
-    keysFIFO.add(pins);
+    uint8_t pinsUp = (new_pins ^ prev_pins) & ~new_pins & 0;//enabledUp;
+    uint8_t pins = (new_pins ^ prev_pins) & new_pins & enabled;
+    prev_pins = new_pins;
+
+    if (!pins && !pinsUp) return;
+    enabled &= ~pins;
+    enabledUp &= ~pinsUp;
+
+    keysFIFO.add(pins, pinsUp);
 }

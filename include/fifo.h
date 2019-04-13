@@ -1,22 +1,12 @@
-#ifndef time_h
-#define time_h
+#ifndef fifo_h
+#define fifo_h
 
 #include <Arduino.h>
-
-struct Team
-{
-    bool isFire;
-    unsigned long time;
-
-    void clear(void) {
-        isFire = false;
-        time = 0;
-    }
-};
 
 struct FIFORow
 {
     uint8_t pins;
+    uint8_t pinsUp;
     uint32_t time;
 };
 
@@ -37,8 +27,9 @@ struct FIFO
         return buff[i];
     }
 
-    inline void add(uint8_t pins) {
+    inline void add(uint8_t pins, uint8_t pinsUp) {
         buff[inId].pins = pins;
+        buff[inId].pinsUp = pinsUp;
         buff[inId].time = millis();
         ++inId &= 0xf;
     }
