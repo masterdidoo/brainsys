@@ -21,6 +21,7 @@ Display display;
 FIFO keysFIFO;
 uint32_t lastReset;
 
+bool nextTeam;
 State state;
 uint32_t start;
 uint8_t left_time;
@@ -61,7 +62,9 @@ void setup(void)
     pinMode(13, OUTPUT);
 
     display.begin();
+#ifdef DEBUG
     Serial.begin(9600);
+#endif
 }
 
 
@@ -89,18 +92,23 @@ void readTeams(FIFORow &key){
     uint8_t mask = 0b100;
     for(uint8_t i = 0; i < 4; i++) {
         if (key.pins & mask & ~disabled) {
+            if (state == state_answer && nextTeam) {
+                nextTeam = false;
+                display.printTeam2(i, key.time - timeStart);
+            }
             if (state == state_read) {
+                disabled |= mask;
                 state = state_false;
                 falseTone();
                 display.printTeamFs(i);
             }
             if (state == state_time) {
+                disabled |= mask;
                 state = state_answer;
+                nextTeam = true;
                 teamTone();
                 display.printTeam(i, key.time - timeStart);
             }
-            
-            disabled |= mask;
         }
         mask <<= 1;
     }
@@ -114,9 +122,11 @@ void readHost() {
         }
         state = state_read;
         left_time = 0;
-        u8g2.clear();
+        display.clear(disabled);
         
+#ifdef DEBUG
         Serial.println("reset");
+#endif
     }
     if (state != state_read && state != state_answer) return;
     if (start_btn.isPress()) {
@@ -125,17 +135,18 @@ void readHost() {
         timeStart = millis();
         start = timeStart - 1000;
         startTone();
+        display.clear(disabled);
 
+#ifdef DEBUG
         Serial.println("start");
+#endif
     }
 }
 
 void readKeys(void){
     while(!keysFIFO.isEmpty()) {
         auto key = keysFIFO.get();
-        if (state == state_read || state == state_time) {
-            readTeams(key);
-        }
+        readTeams(key);
         //readHost(key.pins);
     }
     
@@ -175,8 +186,8 @@ void loop(void)
 {
     // auto ms = millis();
     readKeys();
-    updateTimer();
     readHost();
+    updateTimer();
     // ms = millis() - ms;
     // if (ms > 2) Serial.println(ms);
 }
