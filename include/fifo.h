@@ -6,7 +6,6 @@
 struct FIFORow
 {
     uint8_t pins;
-    uint8_t pinsUp;
     uint32_t time;
 };
 
@@ -27,9 +26,8 @@ struct FIFO
         return buff[i];
     }
 
-    inline void add(uint8_t pins, uint8_t pinsUp) {
+    inline void add(uint8_t pins) {
         buff[inId].pins = pins;
-        buff[inId].pinsUp = pinsUp;
         buff[inId].time = millis();
         ++inId &= 0xf;
     }

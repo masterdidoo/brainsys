@@ -1,21 +1,20 @@
 #include <Arduino.h>
 #include "fifo.h"
 #include "display.h"
+#include <GyverButton.h>
 
 #define RESET 6
 #define START 7
 
 #define BEEP 9
 
-#define ALL_KEYS  0b11111100
+#define ALL_KEYS  0b00111100
 #define TEAM_KEYS 0b00111100
 
 enum State
 {
     state_read, state_time, state_answer, state_false, state_end
 };
-
-const char fal[] = " FS";
 
 Display display;
 
@@ -30,6 +29,9 @@ uint32_t timeStart;
 volatile uint8_t enabled = ALL_KEYS;
 uint8_t disabled = ~ALL_KEYS;
 
+GButton reset_btn(RESET);
+GButton start_btn(START);
+
 // void pciSetup(uint8_t pin)
 // {
 //     *digitalPinToPCMSK(pin) |= bit (digitalPinToPCMSKbit(pin));  // enable pin
@@ -39,6 +41,8 @@ uint8_t disabled = ~ALL_KEYS;
 
 void setup(void)
 {
+    reset_btn.setTickMode(true);
+    start_btn.setTickMode(true);
     //set D2-7
     DDRD  &= ~ALL_KEYS;
     PORTD |= ALL_KEYS;
@@ -98,25 +102,8 @@ void readTeams(FIFORow &key){
     }
 }
 
-bool resetEnable = true;
-uint8_t enabledUp;
-
-void readHost(uint8_t pins, uint8_t pinsUp){
-    Serial.println(0x800|pins, 2);
-    Serial.println(0x800|pinsUp, 2);
-    Serial.println(0x800|enabled, 2);
-    Serial.println(0x800|enabledUp, 2);
-//    Serial.println(0x800|disabled, 2);
-    Serial.print(keysFIFO.inId);
-    Serial.print(' ');
-    Serial.println(keysFIFO.outId);
-
-    if (pinsUp & bit(digitalPinToPCMSKbit(RESET))) {
-        lastReset = millis();
-    }
-
-    if (resetEnable && pins & bit(digitalPinToPCMSKbit(RESET))) {
-        resetEnable = false;
+void readHost() {
+    if (reset_btn.isPress()) {
         if (state != state_false) {
             enabled = ALL_KEYS;
             disabled = ~ALL_KEYS;
@@ -128,7 +115,7 @@ void readHost(uint8_t pins, uint8_t pinsUp){
         Serial.println("reset");
     }
     if (state != state_read && state != state_answer) return;
-    if (pins & bit(digitalPinToPCMSKbit(START))) {
+    if (start_btn.isPress()) {
         left_time = state == state_read ? 61 : 21;
         state = state_time;
         timeStart = millis();
@@ -139,20 +126,18 @@ void readHost(uint8_t pins, uint8_t pinsUp){
 }
 
 void readKeys(void){
-    while(!keysFIFO.isEmpty()){
+    while(!keysFIFO.isEmpty()) {
         auto key = keysFIFO.get();
         if (state == state_read || state == state_time) {
             readTeams(key);
         }
-        readHost(key.pins, key.pinsUp);
+        //readHost(key.pins);
     }
     
-    resetEnable = resetEnable || (millis() - lastReset < 50);
     enabled = ~disabled;
-    enabledUp = bit(digitalPinToPCMSKbit(RESET));
 }
 
-void updateTimer(void){
+void updateTimer(void) {
     if (state != state_time){
         return;
     }
@@ -182,9 +167,9 @@ void loop(void)
     // auto ms = millis();
     readKeys();
     updateTimer();
+    readHost();
     // ms = millis() - ms;
     // if (ms > 2) Serial.println(ms);
-    //delay(1000);
 }
 
 uint8_t prev_pins = 0;
@@ -193,13 +178,11 @@ ISR (PCINT2_vect)
 {
     uint8_t new_pins = ~PIND;
 
-    uint8_t pinsUp = (new_pins ^ prev_pins) & ~new_pins & 0;//enabledUp;
     uint8_t pins = (new_pins ^ prev_pins) & new_pins & enabled;
     prev_pins = new_pins;
 
-    if (!pins && !pinsUp) return;
+    if (!pins) return;
     enabled &= ~pins;
-    enabledUp &= ~pinsUp;
 
-    keysFIFO.add(pins, pinsUp);
+    keysFIFO.add(pins);
 }
