@@ -70,15 +70,19 @@ void lastTone(void){
 }
 
 void timeOutTone(void){
-    tone(BEEP, 600, 1000);
+    tone(BEEP, 500, 1000);
+}
+
+void startTone(void){
+    tone(BEEP, 550, 1000);
 }
 
 void falseTone(void){
-    tone(BEEP, 700, 1000);
+    tone(BEEP, 800, 1000);
 }
 
 void teamTone(void){
-    tone(BEEP, 800, 1000);
+    tone(BEEP, 600, 1000);
 }
 
 void readTeams(FIFORow &key){
@@ -120,6 +124,7 @@ void readHost() {
         state = state_time;
         timeStart = millis();
         start = timeStart - 1000;
+        startTone();
 
         Serial.println("start");
     }
@@ -154,6 +159,10 @@ void updateTimer(void) {
             return;
         }
         if (left_time <= 3){
+            lastTone();
+            return;
+        }
+        if (left_time == 30){
             lastTone();
             return;
         }
