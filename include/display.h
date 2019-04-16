@@ -19,6 +19,7 @@ struct Display {
     }
 
     void printTeamFs(uint8_t id){
+        digitalWrite(A0+id, HIGH);
         char m_str[] = "1 FS";
         m_str[0] += id;
 
@@ -36,6 +37,7 @@ struct Display {
     }
 
     void printTeam(uint8_t id, uint16_t time){
+        digitalWrite(A0+id, HIGH);
         printTeamInt(id, time, 0);
     }
 
@@ -55,6 +57,7 @@ struct Display {
         u8x8.clear();
         u8x8.setFont(FONTx1);
         for (int i=0;i<4;i++){
+            digitalWrite(A0+i, LOW);
             if (bits & bit(i+2)) continue;
             u8x8.setCursor(0,i);
             u8x8.print(i+1);

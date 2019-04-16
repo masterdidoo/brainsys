@@ -47,6 +47,10 @@ void setup(void)
     //set D2-7
     DDRD  &= ~ALL_KEYS;
     PORTD |= ALL_KEYS;
+    pinMode(A0, OUTPUT);
+    pinMode(A1, OUTPUT);
+    pinMode(A2, OUTPUT);
+    pinMode(A3, OUTPUT);
     // pinMode(A0, INPUT_PULLUP);
     // pinMode(A1, INPUT_PULLUP);
     // pinMode(A2, INPUT_PULLUP);
@@ -69,23 +73,27 @@ void setup(void)
 
 
 void lastTone(void){
-    tone(BEEP, 500, 100);
+    tone(BEEP, 1500, 100);
 }
 
 void timeOutTone(void){
-    tone(BEEP, 500, 1000);
+    tone(BEEP, 1500, 1000);
 }
 
 void startTone(void){
-    tone(BEEP, 550, 1000);
+    tone(BEEP, 2000, 1000);
 }
 
 void falseTone(void){
-    tone(BEEP, 800, 1000);
+    for(uint8_t i=0;i<5;i++)
+    {
+        tone(BEEP, 800, 200);
+        delay(300);
+    }
 }
 
 void teamTone(void){
-    tone(BEEP, 600, 1000);
+    tone(BEEP, 1800, 1000);
 }
 
 void readTeams(FIFORow &key){
@@ -99,8 +107,8 @@ void readTeams(FIFORow &key){
             if (state == state_read) {
                 disabled |= mask;
                 state = state_false;
-                falseTone();
                 display.printTeamFs(i);
+                falseTone();
             }
             if (state == state_time) {
                 disabled |= mask;
