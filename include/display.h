@@ -19,9 +19,8 @@ struct Display {
     }
 
     void printTeamFs(uint8_t id){
-        digitalWrite(A0+id, HIGH);
         char m_str[] = "1 FS";
-        m_str[0] += id;
+        m_str[0] += 5-id;
 
         u8x8.setFont(FONTx4);
         u8x8.draw2x2String(2,0,m_str);
@@ -29,7 +28,7 @@ struct Display {
 
     void inline printTeamInt(uint8_t id, uint16_t time, u8g2_uint_t row){
         char m_str[] = "1 xxxxx";
-        m_str[0] += id;
+        m_str[0] += 5+id;
         strcpy(m_str+2, u8x8_u16toa(time, 5));
 
         u8x8.setFont(FONTx2);
