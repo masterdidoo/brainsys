@@ -7,14 +7,13 @@
 #define START 7
 
 #define BEEP 9
-//9
 
 #define ALL_KEYS  0b00111100
 #define TEAM_KEYS 0b00111100
 
 enum State
 {
-    state_read, state_time, state_answer, state_end, state_false
+    state_read, state_time, state_answer, state_end//, state_false
 };
 
 Display display;
@@ -86,7 +85,7 @@ void startTone(void){
 }
 
 void falseTone(int id){
-    for(uint8_t i=0;i<5;i++)
+    for(uint8_t i=0;i<7;i++)
     {
         tone(BEEP, 800, 150);
         digitalWrite(A0+id, HIGH);
@@ -110,9 +109,9 @@ void readTeams(FIFORow &key){
             }
             if (state == state_read) {
                 disabled |= mask;
-                state = state_false;
-                display.printTeamFs(i);
+                display.printTeamFs(i, disabled);
                 falseTone(i);
+                keysFIFO.clear();
             }
             if (state == state_time) {
                 disabled |= mask;
@@ -128,10 +127,9 @@ void readTeams(FIFORow &key){
 
 void readHost() {
     if (reset_btn.isPress()) {
-        if (state != state_false) {
-            enabled = ALL_KEYS;
-            disabled = ~ALL_KEYS;
-        }
+        enabled = ALL_KEYS;
+        disabled = ~ALL_KEYS;
+
         state = state_read;
         left_time = 0;
         display.clear(disabled);

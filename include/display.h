@@ -18,9 +18,10 @@ struct Display {
         clear(0);
     }
 
-    void printTeamFs(uint8_t id){
+    void printTeamFs(uint8_t id, uint8_t bits){
+        clear(bits);
         char m_str[] = "1 FS";
-        m_str[0] += 5-id;
+        m_str[0] += 3-id;
 
         u8x8.setFont(FONTx4);
         u8x8.draw2x2String(2,0,m_str);
@@ -28,7 +29,7 @@ struct Display {
 
     void inline printTeamInt(uint8_t id, uint16_t time, u8g2_uint_t row){
         char m_str[] = "1 xxxxx";
-        m_str[0] += 5+id;
+        m_str[0] += 3-id;
         strcpy(m_str+2, u8x8_u16toa(time, 5));
 
         u8x8.setFont(FONTx2);
@@ -58,8 +59,8 @@ struct Display {
         for (int i=0;i<4;i++){
             digitalWrite(A0+i, LOW);
             if (bits & bit(i+2)) continue;
-            u8x8.setCursor(0,i);
-            u8x8.print(i+1);
+            u8x8.setCursor(0,3-i);
+            u8x8.print(3-i+1);
         }
     }
 };

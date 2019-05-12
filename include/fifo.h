@@ -20,6 +20,10 @@ struct FIFO
         return inId == outId;
     }
 
+    inline void clear(void) {
+        outId = inId;
+    }
+
     inline FIFORow& get(void) {
         auto i = outId;
         ++outId &= 0xf;
